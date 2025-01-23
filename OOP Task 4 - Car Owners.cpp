@@ -35,6 +35,7 @@ o По един ред за всеки притежател с името и о�
 #include <vector>
 #include <string>
 #include <fstream>
+#include <iomanip>
 
 class Car
 {
@@ -47,6 +48,20 @@ public:
             throw "Invalid value!";
     };
 
+    std::string GetBrand() {
+        return m_brand;
+    }
+
+    size_t GetUniqueIDNumber() {
+        return m_uniqueIdNumber;
+    }
+
+    size_t GetHorsePower() {
+        return m_horsePower;
+    }
+
+
+private:
     std::string m_brand;
     size_t m_uniqueIdNumber = 0;
     size_t m_horsePower = 0;
@@ -70,6 +85,16 @@ public:
         }
     }
 
+    size_t GetLicensePlate() {
+        return m_licensePlate;
+    }
+
+    char* GetName() {
+        return m_name;
+    }
+    
+
+private:
     static const int MAX_NAME_SIZE = 23;
     char m_name[MAX_NAME_SIZE+1];
     size_t m_licensePlate = 0;
@@ -81,6 +106,7 @@ bool CreateCar(std::vector<Car>& cars, const std::string& brand, size_t uniqueID
 bool AddOwner(std::vector<CarOwner>& carOwners, const char name[], const size_t& idNumber, const size_t& licensePlate);
 void AverageHorsePower(const std::vector<CarOwner>& carOwners, const std::vector<Car>& cars, std::ostream& file);
 void ListOfCars(const std::vector<Car>& cars);
+void ListOfCarOwners(const std::vector<CarOwner>& carOwners);
 
 
 int main()
@@ -99,17 +125,21 @@ int main()
         switch (option) {
         case 1:
         {
+            //Taзи част ще бъде използвана за създаване на колите
             std::string brand;
             size_t uniqueIDnumber = 0;
             size_t horsePower = 0;
 
+            std::cout << "Enter car brand: ";
             std::cin >> brand;
+            std::cout << "Enter Unique ID number of the car: ";
             std::cin >> uniqueIDnumber;
+            std::cout << "Enter the horsepower of the car: ";
             std::cin >> horsePower;
             if (CreateCar(cars, brand, uniqueIDnumber, horsePower))
-                std::cout << "Car was created!\n";
+                std::cout << "\nCar was created!\n\n";
             else {
-                std::cout << "Car was not created!\n";
+                std::cout << "\nCar was not created!\n";
             }
             break;
         }
@@ -136,8 +166,15 @@ int main()
             }
         }
             break;
-
         case 3:
+            //Ще показва списък с колите
+            ListOfCars(cars);
+            break;
+        case 4:
+            //Ще показва списък със собствениците
+            ListOfCarOwners(carOwners);
+            break;
+        case 5:
         {
             std::fstream reportFile("car-report.txt", std::ios::out);
             if (!reportFile) {
@@ -151,9 +188,9 @@ int main()
             break;
         }
 
-        case 4:
+        case 6:
             break;
-        case 5:
+        case 7:
             running = false;
             break;
         default:
@@ -173,11 +210,13 @@ int Menu() {
         std::cout << "Choose an option: \n";
         std::cout << "1. Create a car\n";
         std::cout << "2. Create a new car owner\n";
-        std::cout << "3. Car report\n";
-        std::cout << "4. Generate binary file\n";
-        std::cout << "5. Exit\n";
+        std::cout << "3. Car list\n";
+        std::cout << "4. Car owner`s list\n";
+        std::cout << "5. Car report\n";
+        std::cout << "6. Generate binary file\n";
+        std::cout << "7. Exit\n";
         std::cin >> opt;
-    } while (opt < 1 || opt > 4);
+    } while (opt < 1 || opt > 7);
 
     return opt;
 }
@@ -187,9 +226,9 @@ bool AddOwner(std::vector<CarOwner>& carOwners, const char name[], const size_t&
     
 
     //Тази част ще проверява дали вече съществува кола със зададения регистрационен номер
-    for (size_t i = 0; i < carOwners.size(); i++) {
-        if (licensePlate == carOwners[i].m_licensePlate) {
-            std::cout << "License plate already exist! Entry was not created!\n";
+    for (auto carowner : carOwners) {
+        if (licensePlate == carowner.GetLicensePlate()) {
+            std::cout << "License plate already exists!\n\n";
             return false;
         }
     }
@@ -230,15 +269,14 @@ void AverageHorsePower(const std::vector<CarOwner>& carOwners, const std::vector
 
 
     //Тази част ще калулира средната мощност на всички коли
-    for (size_t i = 0; i < carOwners.size(); i++) {
-        if (carOwners[i].m_idNumber < cars.size()) {
-            totalHorsePower += cars[carOwners[i].m_idNumber].m_horsePower;
-        }
+    for (auto car : cars) {
+        totalHorsePower += car.GetHorsePower();
     }
-    averageHorsePower = totalHorsePower / carOwners.size();
+    averageHorsePower = totalHorsePower / cars.size();
 
+    std::cout << std::fixed << std::setprecision(2);
     file << "The average HorsePower of all cars is : ";
-    file << averageHorsePower;
+    file << averageHorsePower << "hp";
     
 }
 
@@ -247,7 +285,17 @@ void ListOfCars(const std::vector<Car>& cars) {
     std::cout << "\n                  LIST OF CARS                     \n";
     std::cout << "Brand           HorsePowers        Unique ID Number\n";
     std::cout << "---------------------------------------------------\n";
-    for (size_t i = 0; i < cars.size(); ++i) {
-        std::cout << cars[i].m_brand << "             " << cars[i].m_horsePower << "                      " << cars[i].m_uniqueIdNumber << "\n";
+    for (auto car : cars) {
+        std::cout << car.GetBrand() << "            " << car.GetHorsePower() << "                       " << car.GetUniqueIDNumber() << "\n";
+    }
+}
+
+//Това ще изкарва всички налични създадени собственииц
+void ListOfCarOwners(const std::vector<CarOwner>& carOwners) {
+    std::cout << "\n                  LIST OF OWNERS                     \n";
+    std::cout << "Owner name        License plate\n";
+        std::cout << "---------------------------------------------------\n";
+    for (auto carowner : carOwners) {
+        std::cout << carowner.GetName() << "             " << carowner.GetLicensePlate() << "\n";
     }
 }
